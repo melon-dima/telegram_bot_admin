@@ -1,4 +1,3 @@
-# При 403 от Docker Hub: "docker login" или сборка из Debian — см. docs/DOCKER_BUILD.md
 FROM php:8.3-fpm
 
 RUN apt-get update && apt-get install -y \
@@ -33,14 +32,14 @@ COPY nginx.conf /etc/nginx/conf.d/localhost.conf
 # Копируем конфигурацию Supervisor (относительно папки docker в контексте ../)
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Устанавливаем права доступа для директории
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html
+
+# Копируем entrypoint-скрипт запуска
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 # Задаем рабочую директорию
 WORKDIR /var/www/html
 
-# Выполняем composer install и запускаем Supervisor
-CMD composer install --no-interaction --optimize-autoloader  && /usr/bin/supervisord
-#CMD /usr/bin/supervisord
-#--no-dev
+# Runtime-шаги выполняем в entrypoint после старта контейнера
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

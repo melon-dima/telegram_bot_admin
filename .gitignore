@@ -26,3 +26,4 @@ Homestead.yaml
 Thumbs.db
 supervisord.log
 supervisord.pid
+composer.lock
