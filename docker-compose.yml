@@ -1,0 +1,31 @@
+#tba - Telegram Bot Admin
+name: tba
+
+services:
+  tba_php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tba_php
+    environment:
+      TZ: Europe/Moscow
+    volumes:
+      - ./:/var/www/html
+      - ./storage/logs/nginx:/var/log/nginx
+      # Конфиг nginx с хоста — правки применяются без пересборки образа (reload nginx)
+      - ./nginx.conf:/etc/nginx/conf.d/localhost.conf
+    labels:
+      - traefik.enable=true
+      # === Один общий сервис (бэкенд) === 
+      - traefik.http.services.laravel_tba.loadbalancer.server.port=80
+
+      # === Роутер Локальный ===
+      - traefik.http.routers.tba_http.rule=Host(`site.local`)
+      - traefik.http.routers.tba_http.entrypoints=web
+      - traefik.http.routers.tba_http.service=laravel_tba
+    networks:
+      - traefik_default
+
+networks:
+  traefik_default:
+    external: true
