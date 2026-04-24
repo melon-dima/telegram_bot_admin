@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'service_auth' => [
+        'token' => env('SERVICE_API_TOKEN', env('LARAVEL_INTERNAL_TOKEN')),
+    ],
+
 ];
