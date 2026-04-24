@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPA Админка бота</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      display: flex; 
+      height: 100vh; 
+      background: #fff; 
+    }
+    .auth-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f2f5;
+    }
+    .auth-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+    .auth-box h1 { margin-top: 0; text-align: center; }
+    .auth-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .auth-box button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .auth-box button:hover { background: #0077b3; }
+    .auth-box .error { color: red; margin: 10px 0; }
+    .auth-box .link { text-align: center; margin-top: 15px; }
+    .auth-box .link a { color: #0088cc; text-decoration: none; }
+    
+    .main-container {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+    }
+    .sidebar { 
+      width: 360px; 
+      background: #f0f2f5; 
+      border-right: 1px solid #ddd; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .sidebar-header { 
+      padding: 20px; 
+      background: #0088cc; 
+      color: white; 
+      font-size: 20px; 
+      font-weight: bold; 
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .bot-selector {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 14px;
+    }
+    .bot-selector option {
+      background: #0088cc;
+      color: white;
+    }
+    .chat-search {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 14px;
+    }
+    .chat-search::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+    .sidebar-header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+    .sidebar-header button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .chat-list { 
+      flex: 1; 
+      overflow-y: auto; 
+      list-style: none; 
+      padding: 0; 
+      margin: 0; 
+    }
+    .chat-item { 
+      display: flex; 
+      padding: 12px; 
+      align-items: center; 
+      border-bottom: 1px solid #e5e5e5; 
+      text-decoration: none; 
+      color: #000; 
+      cursor: pointer;
+    }
+    .chat-item:hover { background: #e5e5e5; }
+    .chat-item.active { background: #d0e8f0; }
+    .chat-avatar { 
+      width: 50px; 
+      height: 50px; 
+      border-radius: 50%; 
+      object-fit: cover; 
+      margin-right: 12px; 
+      background: #ccc; 
+    }
+    .chat-info { flex: 1; }
+    .chat-name { font-weight: 600; font-size: 16px; }
+    .chat-preview { font-size: 14px; color: #666; }
+    
+    .main { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      background: #efeae2; 
+    }
+    .main.empty {
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 18px;
+    }
+    .header { 
+      padding: 15px; 
+      background: #0088cc; 
+      color: white; 
+      display: flex; 
+      align-items: center; 
+      font-size: 18px; 
+    }
+    .header-avatar { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 50%; 
+      margin-right: 12px; 
+      object-fit: cover; 
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: url('https://user-images.githubusercontent.com/15067062/207634678-4a8e2c2e-4c6f-4d1d-9f3a-5e5c5d5e5c5d.jpg') repeat;
+      background-size: 400px;
+    }
+    .msg {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      word-wrap: break-word;
+      position: relative;
+      align-self: flex-start;
+      background: #ffffff;
+      color: #000;
+    }
+    .msg.out {
+      align-self: flex-end;
+      background: #0088cc;
+      color: white;
+    }
+    .msg.out::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -6px;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      border-left-color: #0088cc;
+      border-bottom-color: #0088cc;
+    }
+    .msg.in::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -6px;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      border-right-color: #ffffff;
+      border-bottom-color: #ffffff;
+    }
+    .msg.system {
+      align-self: center;
+      background: rgba(0, 136, 204, 0.1);
+      color: #666;
+      font-size: 13px;
+      font-style: italic;
+      padding: 6px 12px;
+      border-radius: 12px;
+      max-width: 80%;
+      text-align: center;
+      margin: 4px 0;
+    }
+    .msg.system::after {
+      display: none;
+    }
+    .input-bar { 
+      display: flex; 
+      align-items: center; 
+      padding: 10px 15px; 
+      background: #fff; 
+      border-top: 1px solid #ddd; 
+    }
+    .input-bar textarea {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      resize: none;
+      font-size: 16px;
+      min-height: 20px;
+      max-height: 150px;
+    }
+    .send-btn {
+      background: #0088cc;
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-left: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .attach-btn { 
+      cursor: pointer; 
+      font-size: 24px; 
+      color: #0088cc; 
+      margin-left: 10px; 
+    }
+    .attach-btn input { display: none; }
+    
+    #videoModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    #videoModal video {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 12px;
+    }
+    #videoModal button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+    }
+    #photoModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    #photoModal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 12px;
+    }
+    #photoModal button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Авторизация -->
+  <div id="authContainer" class="auth-container">
+    <div class="auth-box">
+      <h1 id="authTitle">Вход в админку</h1>
+      <div id="authError" class="error" style="display: none;"></div>
+      <form id="authForm">
+        <input id="authUsername" name="username" placeholder="Логин" required>
+        <input id="authPassword" name="password" type="password" placeholder="Пароль" required>
+        <button type="submit" id="authSubmit">Войти</button>
+      </form>
+      <div class="link">
+        <a href="#" id="authToggle">Регистрация</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Основной интерфейс -->
+  <div id="mainContainer" class="main-container" style="display: none;">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-header-actions">
+          <span>Чаты</span>
+          <div>
+            <button onclick="openBotManager()" title="Управление ботами">⚙️</button>
+            <button onclick="logout()">Выход</button>
+          </div>
+        </div>
+        <select id="botSelector" class="bot-selector" onchange="onBotSelect(this.value)">
+          <option value="">Загрузка ботов...</option>
+        </select>
+        <input type="text" id="chatSearch" class="chat-search" placeholder="Поиск по чатам..." oninput="filterChats()">
+      </div>
+      <ul id="chatList" class="chat-list"></ul>
+    </div>
+    <div id="mainContent" class="main empty">
+      Выберите чат слева, чтобы начать общение
+    </div>
+  </div>
+
+  <!-- Модальное окно для видео -->
+  <div id="videoModal">
+    <button onclick="closeVideoModal()">×</button>
+    <video id="modalVideo" controls autoplay></video>
+  </div>
+
+  <!-- Модальное окно для фото -->
+  <div id="photoModal">
+    <button onclick="closePhotoModal()">×</button>
+    <img id="modalPhoto" alt="Фото">
+  </div>
+
+  <!-- Модальное окно для списка участников -->
+  <div id="membersModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:12px; max-width:500px; width:90%; max-height:80vh; overflow:auto; padding:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Участники группы</h2>
+        <button onclick="closeMembersModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+      </div>
+      <div id="membersList" style="max-height:60vh; overflow-y:auto;">
+        <div style="text-align:center; padding:20px; color:#999;">Загрузка...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно управления ботами -->
+  <div id="botManagerModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:12px; max-width:600px; width:90%; max-height:80vh; overflow:auto; padding:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Управление ботами</h2>
+        <button onclick="closeBotManager()" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+      </div>
+      
+      <!-- Telegram Login Widget -->
+      <div style="background:#f5f5f5; padding:16px; border-radius:8px; margin-bottom:20px;">
+        <h3 style="margin:0 0 12px;">Вход через Telegram</h3>
+        <p style="color:#666; font-size:13px; margin-bottom:12px;">
+          Для входа через Telegram нужен API ID. Получите его на <a href="https://my.telegram.org" target="_blank">my.telegram.org</a>
+        </p>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; margin-bottom:4px; font-size:13px;">API ID:</label>
+          <input type="text" id="telegramApiId" placeholder="Введите API ID" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;" onchange="initTelegramLogin()">
+        </div>
+        <div id="telegram-login-container"></div>
+      </div>
+
+      <!-- Настройки сортировки -->
+      <div style="background:#f5f5f5; padding:16px; border-radius:8px; margin-bottom:20px;">
+        <h3 style="margin:0 0 12px;">Настройки сортировки чатов</h3>
+        <label style="display:flex; align-items:center; cursor:pointer;">
+          <input type="checkbox" id="reverseSortOrder" onchange="saveSortSettings()" style="margin-right:8px;">
+          <span>Обратный порядок сортировки (старые сообщения вверху)</span>
+        </label>
+      </div>
+      
+      <!-- Добавить бота -->
+      <div style="background:#f5f5f5; padding:16px; border-radius:8px; margin-bottom:20px;">
+        <h3 style="margin:0 0 12px;">Добавить нового бота</h3>
+        <input type="text" id="newBotName" placeholder="Название бота" style="width:100%; padding:10px; margin-bottom:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+        <input type="text" id="newBotToken" placeholder="Токен бота от @BotFather" style="width:100%; padding:10px; margin-bottom:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+        <label style="display:block; margin-bottom:4px; font-size:13px; color:#666;">Режим бота:</label>
+        <select id="newBotMode" style="width:100%; padding:10px; margin-bottom:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+          <option value="poll">Polling — сервис запрашивает обновления</option>
+          <option value="webhook">Webhook — Telegram шлёт на URL (пока не реализован)</option>
+        </select>
+        <button onclick="addBot()" style="background:#0088cc; color:white; border:none; padding:10px 20px; border-radius:4px; cursor:pointer;">Добавить</button>
+      </div>
+      
+      <!-- Список ботов -->
+      <div id="botList"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    const JWT_STORAGE_KEY = 'tba.jwt';
+    const AUTH_USER_STORAGE_KEY = 'tba.user';
+    let currentUser = null;
+    let currentChatId = null;
+    let currentBotId = null;
+    let lastMessageId = '0';
+    let pollingInterval = null;
+    let allChats = []; // Храним все чаты для поиска и сортировки
+    let replyToMessageId = null; // ID сообщения, на которое отвечаем
+
+    function getJwtToken() {
+      return localStorage.getItem(JWT_STORAGE_KEY) || '';
+    }
+
+    function setAuthState(token, user) {
+      if (token) {
+        localStorage.setItem(JWT_STORAGE_KEY, token);
+      }
+      if (user) {
+        localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
+      }
+      currentUser = user || null;
+    }
+
+    function clearAuthState() {
+      localStorage.removeItem(JWT_STORAGE_KEY);
+      localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+      currentUser = null;
+    }
+
+    const EMPTY_IMAGE_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+    function revokeBlobUrlFromElement(element) {
+      if (!element) return;
+      const blobUrl = element.dataset?.blobUrl;
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        delete element.dataset.blobUrl;
+      }
+    }
+
+    function cleanupProtectedImages(root) {
+      if (!root) return;
+      root.querySelectorAll('img[data-blob-url], video[data-blob-url]').forEach((node) => {
+        revokeBlobUrlFromElement(node);
+      });
+    }
+
+    async function fetchMediaBlobUrl(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to load media: ${response.status}`);
+      }
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    }
+
+    async function setProtectedImageSource(imgElement, url, fallbackSrc = '') {
+      if (!imgElement || !url) {
+        if (fallbackSrc) {
+          imgElement.src = fallbackSrc;
+        }
+        return;
+      }
+
+      const requestId = `${Date.now()}-${Math.random()}`;
+      imgElement.dataset.requestId = requestId;
+      revokeBlobUrlFromElement(imgElement);
+
+      try {
+        const blobUrl = await fetchMediaBlobUrl(url);
+        if (!imgElement.isConnected || imgElement.dataset.requestId !== requestId) {
+          URL.revokeObjectURL(blobUrl);
+          return;
+        }
+        imgElement.dataset.blobUrl = blobUrl;
+        imgElement.src = blobUrl;
+      } catch (err) {
+        if (fallbackSrc) {
+          imgElement.src = fallbackSrc;
+        }
+      }
+    }
+
+    function hydrateProtectedImages(root = document) {
+      root.querySelectorAll('img[data-protected-src]').forEach((img) => {
+        const protectedSrc = img.dataset.protectedSrc;
+        if (!protectedSrc) return;
+        const fallbackSrc = img.dataset.fallbackSrc || '';
+        setProtectedImageSource(img, protectedSrc, fallbackSrc);
+      });
+    }
+
+    function isApiUrl(url) {
+      return url.includes('/api/');
+    }
+
+    function isPublicAuthEndpoint(url) {
+      return /\/api\/auth\/(login|register)$/.test(url);
+    }
+
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (input, init = {}) => {
+      const url = typeof input === 'string' ? input : (input?.url || '');
+      const options = { ...init };
+
+      if (isApiUrl(url) && !isPublicAuthEndpoint(url)) {
+        const token = getJwtToken();
+        if (token) {
+          const headers = new Headers(options.headers || {});
+          if (!headers.has('Authorization')) {
+            headers.set('Authorization', `Bearer ${token}`);
+          }
+          options.headers = headers;
+        }
+      }
+
+      const response = await originalFetch(input, options);
+
+      if (isApiUrl(url) && /\/api\/auth\/(login|register)$/.test(url) && response.ok) {
+        const payload = await response.clone().json().catch(() => null);
+        if (payload?.token) {
+          setAuthState(payload.token, payload.user || null);
+        }
+      }
+
+      if (isApiUrl(url) && /\/api\/auth\/logout$/.test(url) && response.ok) {
+        clearAuthState();
+      }
+
+      if (isApiUrl(url) && response.status === 401 && !isPublicAuthEndpoint(url)) {
+        clearAuthState();
+        if (typeof showAuth === 'function') {
+          showAuth();
+        }
+      }
+
+      return response;
+    };
+
+    // Проверка авторизации при загрузке
+    async function checkAuth() {
+      if (!getJwtToken()) {
+        showAuth();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/check`);
+        const data = await res.json();
+        if (data.authenticated) {
+          setAuthState(getJwtToken(), data.user || null);
+          showMain();
+        } else {
+          clearAuthState();
+          showAuth();
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        clearAuthState();
+        showAuth();
+      }
+    }
+    // Показать форму авторизации
+    function showAuth() {
+      document.getElementById('authContainer').style.display = 'flex';
+      document.getElementById('mainContainer').style.display = 'none';
+      let isRegister = false;
+
+      document.getElementById('authToggle').onclick = (e) => {
+        e.preventDefault();
+        isRegister = !isRegister;
+        document.getElementById('authTitle').textContent = isRegister ? 'Регистрация' : 'Вход в админку';
+        document.getElementById('authSubmit').textContent = isRegister ? 'Зарегистрироваться' : 'Войти';
+        document.getElementById('authToggle').textContent = isRegister ? 'Вход' : 'Регистрация';
+        document.getElementById('authError').style.display = 'none';
+      };
+
+      document.getElementById('authForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('authUsername').value;
+        const password = document.getElementById('authPassword').value;
+        const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+
+        try {
+          const res = await fetch(`${API_BASE}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await res.json();
+          if (res.ok && data.success) {
+            showMain();
+          } else {
+            document.getElementById('authError').textContent = data.error || 'Ошибка';
+            document.getElementById('authError').style.display = 'block';
+          }
+        } catch (err) {
+          document.getElementById('authError').textContent = 'Ошибка соединения';
+          document.getElementById('authError').style.display = 'block';
+        }
+      };
+    }
+
+    // Показать основной интерфейс
+    function showMain() {
+      document.getElementById('authContainer').style.display = 'none';
+      document.getElementById('mainContainer').style.display = 'flex';
+      loadBots();
+    }
+
+    // Загрузка списка ботов
+    async function loadBots() {
+      try {
+        const res = await fetch(`${API_BASE}/api/bots`);
+        const bots = await res.json();
+        
+        const botSelector = document.getElementById('botSelector');
+        if (!botSelector) return;
+        
+        botSelector.innerHTML = '<option value="">Выберите бота</option>';
+        
+        if (bots.length === 0) {
+          botSelector.innerHTML += '<option value="" disabled>Нет доступных ботов</option>';
+          return;
+        }
+        
+        bots.forEach(bot => {
+          const option = document.createElement('option');
+          option.value = bot.id;
+          option.textContent = `${bot.name} ${bot.isOwner ? '(Мой)' : ''}`;
+          botSelector.appendChild(option);
+        });
+        
+        // Если есть боты и не выбран текущий, выбираем первый
+        if (bots.length > 0 && !currentBotId) {
+          currentBotId = bots[0].id;
+          botSelector.value = currentBotId;
+          loadUsers();
+        }
+      } catch (err) {
+        console.error('Load bots error:', err);
+      }
+    }
+
+    // Обработчик выбора бота
+    function onBotSelect(botId) {
+      currentBotId = botId;
+      currentChatId = null;
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
+      if (botId) {
+        loadUsers();
+      } else {
+        document.getElementById('chatList').innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">Выберите бота</li>';
+        document.getElementById('mainContent').className = 'main empty';
+        document.getElementById('mainContent').innerHTML = 'Выберите бота слева, чтобы начать работу';
+      }
+    }
+
+    // Выход
+    async function logout() {
+      try {
+        await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST' });
+      } catch (err) {
+        console.error('Logout error:', err);
+      } finally {
+        clearAuthState();
+        currentChatId = null;
+        currentBotId = null;
+        allChats = [];
+        replyToMessageId = null;
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
+        showAuth();
+      }
+    }
+
+    // Загрузка списка пользователей и чатов
+    async function loadUsers() {
+      if (!currentBotId) return;
+      
+      try {
+        console.log('[loadUsers] Fetching chats for bot:', currentBotId);
+        // Используем правильный endpoint для чатов
+        const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats`);
+        const items = await res.json();
+        
+        console.log('[loadUsers] Received chats:', items);
+        console.log('[loadUsers] Chats count:', items.length);
+        
+        // Преобразуем формат данных для совместимости
+        // В Telegram API всегда есть объект chat, даже для личных сообщений
+        const formattedItems = items.map(item => ({
+          telegramId: item.telegram_chat_id || item.telegramChatId,
+          type: 'chat',
+          chatType: item.type,
+          title: item.title,
+          firstName: item.first_name || item.title || item.firstName,
+          lastName: item.last_name || item.lastName,
+          username: item.username,
+          _count: { messages: 0 } // Будет обновлено ниже
+        }));
+        
+        console.log('[loadUsers] All chats count:', formattedItems.length);
+        
+        // Загружаем последние сообщения для каждого чата (включая личные)
+        allChats = await Promise.all(formattedItems.map(async (item) => {
+          try {
+            // Получаем последнее сообщение для сортировки
+            // Используем правильный endpoint для чатов
+            const messagesRes = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${item.telegramId}/messages/all`);
+            const messages = await messagesRes.json();
+            const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+            
+            return {
+              ...item,
+              lastMessageDate: lastMessage ? new Date(lastMessage.date) : new Date(0),
+              lastMessage: lastMessage,
+              _count: { messages: messages.length }
+            };
+          } catch (err) {
+            console.error(`Error loading last message for ${item.telegramId}:`, err);
+            return {
+              ...item,
+              lastMessageDate: new Date(0),
+              lastMessage: null
+            };
+          }
+        }));
+        
+        // Сортируем чаты по дате последнего сообщения
+        sortChats();
+        
+        // Рендерим чаты
+        renderChats();
+      } catch (err) {
+        console.error('Load users error:', err);
+      }
+    }
+    
+    // Сортировка чатов
+    function sortChats() {
+      const reverseOrder = localStorage.getItem('chatSortReverse') === 'true';
+      
+      allChats.sort((a, b) => {
+        const dateA = a.lastMessageDate.getTime();
+        const dateB = b.lastMessageDate.getTime();
+        return reverseOrder ? dateA - dateB : dateB - dateA;
+      });
+    }
+    
+    // Рендеринг списка чатов
+    function renderChats() {
+      const chatList = document.getElementById('chatList');
+      cleanupProtectedImages(chatList);
+      chatList.innerHTML = '';
+      
+      const searchQuery = document.getElementById('chatSearch')?.value?.toLowerCase() || '';
+      const filteredChats = allChats.filter(item => {
+        if (!searchQuery) return true;
+        
+        // Всегда работаем с чатами
+        const isGroup = item.chatType === 'group' || item.chatType === 'supergroup';
+        const displayName = isGroup
+          ? (item.title || `Chat ${item.telegramId}`)
+          : `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Unknown';
+        const username = item.username || '';
+        const searchText = `${displayName} ${username}`.toLowerCase();
+        
+        return searchText.includes(searchQuery);
+      });
+
+      if (filteredChats.length === 0) {
+        chatList.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">Нет активных чатов</li>';
+        return;
+      }
+
+      filteredChats.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'chat-item';
+        li.id = `chat-item-${item.telegramId}`; // Уникальный ID для каждого чата
+        li.dataset.telegramId = item.telegramId;
+        // Сравниваем как строки для надежности
+        if (String(item.telegramId) === String(currentChatId)) {
+          li.classList.add('active');
+        }
+        li.onclick = () => openChat(item.telegramId);
+        
+        const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Q4ZDhkOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjOTk5Ij7wn5k8L3RleHQ+PC9zdmc+';
+        
+        // Всегда работаем с чатами (в Telegram API всегда есть объект chat)
+        const isGroup = item.chatType === 'group' || item.chatType === 'supergroup';
+        
+        // Для групп используем title, для личных чатов - firstName/lastName
+        const displayName = isGroup
+          ? (item.title || `Chat ${item.telegramId}`)
+          : `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Unknown';
+        
+        // Username для отображения
+        const usernameDisplay = item.username ? `(@${item.username})` : '';
+        
+        // Количество сообщений
+        const messageCount = item._count?.messages || 0;
+        
+        // Аватар: загружаем через fetch + blob, чтобы JWT не попадал в query
+        const avatarApiUrl = `${API_BASE}/api/bots/${currentBotId}/chats/${item.telegramId}/avatar`;
+        
+        // Префикс для групп
+        const groupPrefix = isGroup ? '👥 ' : '';
+        
+        // Форматируем дату последнего сообщения
+        let lastMessagePreview = '';
+        if (item.lastMessage) {
+          const lastMsgDate = new Date(item.lastMessage.date);
+          const now = new Date();
+          const diffMs = now - lastMsgDate;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
+          
+          let timeStr = '';
+          if (diffMins < 1) {
+            timeStr = 'только что';
+          } else if (diffMins < 60) {
+            timeStr = `${diffMins} мин назад`;
+          } else if (diffHours < 24) {
+            timeStr = `${diffHours} ч назад`;
+          } else if (diffDays < 7) {
+            timeStr = `${diffDays} дн назад`;
+          } else {
+            timeStr = lastMsgDate.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+          }
+          
+          const lastMsgText = item.lastMessage.text || (item.lastMessage.rawJson ? '[Медиа]' : '');
+          const previewText = lastMsgText.length > 30 ? lastMsgText.substring(0, 30) + '...' : lastMsgText;
+          lastMessagePreview = `<div style="font-size: 12px; color: #999; margin-top: 2px;">${previewText} • ${timeStr}</div>`;
+        }
+        
+        li.innerHTML = `
+          <img src="${defaultAvatar}"
+               data-protected-src="${avatarApiUrl}"
+               data-fallback-src="${defaultAvatar}"
+               class="chat-avatar"
+               onerror="this.src='${defaultAvatar}';">
+          <div class="chat-info">
+            <div class="chat-name">${groupPrefix}${displayName} ${usernameDisplay}</div>
+            <div class="chat-preview">Сообщений: ${messageCount}${isGroup ? ` (${item.chatType})` : ''}</div>
+            ${lastMessagePreview}
+          </div>
+        `;
+        chatList.appendChild(li);
+        hydrateProtectedImages(li);
+      });
+    }
+    
+    // Фильтрация чатов по поисковому запросу
+    function filterChats() {
+      renderChats();
+    }
+    
+    // Сохранение настроек сортировки
+    function saveSortSettings() {
+      const reverseOrder = document.getElementById('reverseSortOrder').checked;
+      localStorage.setItem('chatSortReverse', reverseOrder.toString());
+      sortChats();
+      renderChats();
+    }
+    
+    // Загрузка настроек сортировки
+    function loadSortSettings() {
+      const reverseOrder = localStorage.getItem('chatSortReverse') === 'true';
+      const checkbox = document.getElementById('reverseSortOrder');
+      if (checkbox) {
+        checkbox.checked = reverseOrder;
+      }
+    }
+
+    // Обновить активное состояние чата в списке
+    function updateActiveChat(telegramId) {
+      // Убираем класс active у всех элементов
+      document.querySelectorAll('.chat-item.active').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Добавляем класс active текущему чату
+      const chatItem = document.getElementById(`chat-item-${telegramId}`);
+      if (chatItem) {
+        chatItem.classList.add('active');
+      }
+    }
+
+    // Открыть чат
+    async function openChat(telegramId) {
+      const prevChatId = currentChatId;
+      currentChatId = telegramId;
+      lastMessageId = '0';
+      replyToMessageId = null; // Сбрасываем reply при открытии нового чата
+
+      // Обновляем активное состояние без полного ререндера
+      updateActiveChat(telegramId);
+
+      if (!currentBotId) return;
+      
+      try {
+        // Всегда используем endpoint для чатов (в Telegram API всегда есть объект chat)
+        // Загружаем данные чата
+        const userRes = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${telegramId}`);
+        const userData = await userRes.json();
+        // Извлекаем данные, если ответ обернут
+        const user = userData.data || userData;
+
+        // Загружаем все сообщения
+        const messagesRes = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${telegramId}/messages/all`);
+        const messagesData = await messagesRes.json();
+        // Извлекаем данные, если ответ обернут
+        const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
+
+        // Рендерим чат
+        await renderChat(user, messages);
+
+        // Начинаем polling
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
+        startPolling(telegramId);
+      } catch (err) {
+        console.error('Open chat error:', err);
+      }
+    }
+
+    // Рендеринг чата
+    async function renderChat(user, messages) {
+      const mainContent = document.getElementById('mainContent');
+      mainContent.className = 'main';
+      
+      const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Q4ZDhkOCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjOTk5Ij7wn5k8L3RleHQ+PC9zdmc+';
+      
+      // Проверяем, является ли чат группой
+      // Группы имеют отрицательный telegramId (например, -1003840308840)
+      const chatId = user.telegramId || user.telegram_chat_id;
+      const telegramIdNum = parseInt(chatId || '0');
+      const isGroup = telegramIdNum < 0 || user.type === 'group' || user.type === 'supergroup' || user.chatType === 'group' || user.chatType === 'supergroup';
+      
+      // Загружаем количество участников для групп
+      let membersCount = 0;
+      let membersCountHtml = '';
+      if (isGroup) {
+        try {
+          const countRes = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${chatId}/members/count`);
+          if (countRes.ok) {
+            const countData = await countRes.json();
+            // Извлекаем count из ответа (может быть обернут в data)
+            membersCount = countData.count !== undefined ? countData.count : (countData.data?.count !== undefined ? countData.data.count : 0);
+            // Показываем количество участников, даже если оно 0 (для возможности клика)
+            // Используем белый цвет, так как header имеет синий фон (#0088cc)
+            const countText = membersCount > 0 ? membersCount : '?';
+            const participantsText = membersCount === 1 ? 'участник' : (membersCount > 1 ? 'участников' : 'участников');
+            membersCountHtml = `<div style="font-size: 14px; opacity: 0.9; cursor: pointer; margin-top: 4px; color: white; text-decoration: underline; user-select: none;" onclick="showChatMembers('${chatId}')" title="Нажмите, чтобы просмотреть список участников">👥 ${countText} ${participantsText}</div>`;
+          } else {
+            console.warn('[renderChat] Failed to get members count, status:', countRes.status);
+            // Показываем кнопку даже при ошибке
+            // Используем белый цвет, так как header имеет синий фон (#0088cc)
+            membersCountHtml = `<div style="font-size: 14px; opacity: 0.9; cursor: pointer; margin-top: 4px; color: white; text-decoration: underline; user-select: none;" onclick="showChatMembers('${chatId}')" title="Нажмите, чтобы просмотреть список участников">👥 Просмотреть участников</div>`;
+          }
+        } catch (err) {
+          console.error('[renderChat] Failed to load members count:', err);
+          // Показываем кнопку даже при ошибке, чтобы можно было попробовать открыть список
+          // Используем белый цвет, так как header имеет синий фон (#0088cc)
+          membersCountHtml = `<div style="font-size: 14px; opacity: 0.9; cursor: pointer; margin-top: 4px; color: white; text-decoration: underline; user-select: none;" onclick="showChatMembers('${chatId}')" title="Нажмите, чтобы просмотреть список участников">👥 Просмотреть участников</div>`;
+        }
+      }
+      
+      // Для групп не показываем username, если его нет
+      const usernameHtml = (isGroup && !user.username) ? '' : `<div style="font-size: 14px; opacity: 0.8;">@${user.username || 'нет username'}</div>`;
+      
+      // Отображаем закрепленное сообщение, если есть
+      let pinnedMessageHtml = '';
+      if (user.pinnedMessage) {
+        const pinned = user.pinnedMessage;
+        const pinnedText = pinned.text || '[Медиа]';
+        const pinnedFromName = pinned.from ? (pinned.from.first_name || pinned.from.username || 'Unknown') : 'Bot';
+        const pinnedPreview = pinnedText.length > 60 ? pinnedText.substring(0, 60) + '...' : pinnedText;
+        pinnedMessageHtml = `
+          <div id="pinnedMessage" style="background: rgba(255, 255, 255, 0.2); padding: 8px 12px; margin-top: 8px; border-radius: 4px; border-left: 3px solid white; cursor: pointer;" onclick="scrollToPinnedMessage(${pinned.message_id})" title="Нажмите, чтобы перейти к закрепленному сообщению">
+            <div style="font-size: 11px; opacity: 0.9; margin-bottom: 2px;">📌 Закреплено</div>
+            <div style="font-size: 12px; font-weight: 500;">${pinnedFromName}</div>
+            <div style="font-size: 12px; opacity: 0.9;">${pinnedPreview}</div>
+            <button onclick="event.stopPropagation(); unpinMessage(${pinned.message_id});" style="position: absolute; right: 8px; top: 8px; background: rgba(255,255,255,0.3); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Открепить сообщение">✕</button>
+          </div>
+        `;
+      }
+      
+      cleanupProtectedImages(mainContent);
+      mainContent.innerHTML = `
+        <div class="header">
+          <img src="${defaultAvatar}"
+               data-protected-src="${API_BASE}/api/bots/${currentBotId}/chats/${chatId}/avatar"
+               data-fallback-src="${defaultAvatar}"
+               class="header-avatar"
+               onerror="this.src='${defaultAvatar}';">
+          <div style="flex: 1; position: relative;">
+            <div style="font-weight: bold;">${user.title || user.firstName || ''} ${user.lastName || ''}</div>
+            ${usernameHtml}
+            ${membersCountHtml || ''}
+            ${pinnedMessageHtml}
+          </div>
+        </div>
+        <div class="messages" id="messagesContainer"></div>
+        <div id="replyPreview" style="display:none; padding: 8px 15px; background: #e5e5e5; border-top: 1px solid #ddd; font-size: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600; color: #0088cc;">Ответ на сообщение:</div>
+              <div id="replyPreviewText" style="color: #666; margin-top: 4px;"></div>
+            </div>
+            <button onclick="cancelReply()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #999;">×</button>
+          </div>
+        </div>
+        <div class="input-bar">
+          <form id="sendMessageForm" style="display: flex; width: 100%; align-items: center;">
+            <textarea id="messageText" name="text" placeholder="Напишите сообщение..." required></textarea>
+            <button type="submit" class="send-btn">➤</button>
+          </form>
+          <label class="attach-btn" title="Прикрепить фото">
+            📎
+            <input type="file" id="photoInput" accept="image/*">
+          </label>
+        </div>
+      `;
+      hydrateProtectedImages(mainContent);
+
+      // Отображаем сообщения
+      const messagesContainer = document.getElementById('messagesContainer');
+      messages.forEach(m => {
+        messagesContainer.appendChild(createMessageElement(m));
+      });
+      
+      // Устанавливаем lastMessageId на максимальный ID из загруженных сообщений
+      if (messages.length > 0) {
+        // Находим максимальный ID (ID могут быть строками или числами)
+        const ids = messages.map(m => parseInt(m.id) || 0).filter(id => id > 0);
+        if (ids.length > 0) {
+          lastMessageId = Math.max(...ids).toString();
+        } else {
+          // Если все ID невалидные, берём последний ID из массива
+          lastMessageId = messages[messages.length - 1].id || '0';
+        }
+      } else {
+        lastMessageId = '0';
+      }
+      
+      // Прокрутка вниз после рендера
+      setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 100);
+
+      // Обработчик отправки текста
+      document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = document.getElementById('messageText').value.trim();
+        if (!text) return;
+
+        try {
+          const requestBody = { text };
+          if (replyToMessageId) {
+            // Преобразуем в число, если это строка
+            requestBody.reply_to_message_id = typeof replyToMessageId === 'string' ? parseInt(replyToMessageId) : replyToMessageId;
+          }
+          
+          const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${currentChatId}/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          });
+
+          if (res.ok) {
+            const message = await res.json();
+            messagesContainer.appendChild(createMessageElement(message));
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            document.getElementById('messageText').value = '';
+            lastMessageId = message.id;
+            cancelReply(); // Сбрасываем reply после отправки
+            // Обновляем список чатов
+            await loadUsers();
+          }
+        } catch (err) {
+          console.error('Send message error:', err);
+        }
+      });
+
+      // Обработчик отправки фото
+      document.getElementById('photoInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        try {
+        const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${currentChatId}/send-photo`, {
+          method: 'POST',
+          body: formData
+        });
+
+          if (res.ok) {
+            const message = await res.json();
+            messagesContainer.appendChild(createMessageElement(message));
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            lastMessageId = message.id;
+          }
+          e.target.value = '';
+        } catch (err) {
+          console.error('Send photo error:', err);
+        }
+      });
+    }
+
+    // Создание элемента сообщения
+    function createMessageElement(m) {
+      const isOut = m.direction === 'out';
+      
+      // Проверяем, является ли это системным сообщением (присоединение к чату и т.д.)
+      // Проверяем как по тексту, так и по наличию полей new_chat_members в rawJson
+      const hasNewChatMembers = m.rawJson && (
+        m.rawJson.new_chat_member ||
+        m.rawJson.new_chat_members ||
+        m.rawJson.new_chat_participant ||
+        (Array.isArray(m.rawJson.new_chat_members) && m.rawJson.new_chat_members.length > 0)
+      );
+      const isSystemMessage = hasNewChatMembers || (m.text && (
+        m.text.includes('присоединился к чату') || 
+        m.text.includes('присоединилось к чату') ||
+        m.text.includes('joined the chat')
+      ));
+      
+      const div = document.createElement('div');
+      if (isSystemMessage) {
+        div.className = 'msg system';
+        div.style.cursor = 'default';
+      } else {
+        div.className = `msg ${isOut ? 'out' : 'in'}`;
+        div.dataset.messageId = m.id;
+        // Сохраняем telegram message_id для закрепления
+        // Используем message_id из БД, если есть, иначе из rawJson
+        const messageId = m.message_id || (m.rawJson && m.rawJson.message_id);
+        if (messageId) {
+          div.dataset.telegramMessageId = String(messageId);
+        }
+        div.style.cursor = 'pointer';
+        div.style.position = 'relative';
+        // Добавляем контекстное меню для закрепления
+        div.oncontextmenu = (e) => {
+          e.preventDefault();
+          showMessageContextMenu(e, m);
+        };
+        div.onclick = () => replyToMessage(m);
+      }
+
+      // Не показываем подпись отправителя - направление видно по цвету пузыря и позиции
+      let content = '';
+      
+      // Для системных сообщений о добавлении участников формируем специальный текст
+      if (isSystemMessage) {
+        if (m.rawJson) {
+          const newMembers = [];
+          
+          // Собираем всех новых участников
+          if (m.rawJson.new_chat_member) {
+            newMembers.push(m.rawJson.new_chat_member);
+          }
+          if (m.rawJson.new_chat_participant) {
+            newMembers.push(m.rawJson.new_chat_participant);
+          }
+          if (Array.isArray(m.rawJson.new_chat_members)) {
+            newMembers.push(...m.rawJson.new_chat_members);
+          }
+          
+          // Убираем дубликаты по ID
+          const uniqueMembers = [];
+          const seenIds = new Set();
+          for (const member of newMembers) {
+            if (member && member.id && !seenIds.has(member.id)) {
+              seenIds.add(member.id);
+              uniqueMembers.push(member);
+            }
+          }
+          
+          // Формируем текст с именами участников
+          if (uniqueMembers.length > 0) {
+            const memberNames = uniqueMembers.map(member => {
+              const firstName = member.first_name || '';
+              const lastName = member.last_name || '';
+              const username = member.username ? `(@${member.username})` : '';
+              const fullName = `${firstName} ${lastName}`.trim() || 'Пользователь';
+              return `${fullName}${username ? ' ' + username : ''}`;
+            });
+            
+            if (uniqueMembers.length === 1) {
+              content = `👤 ${memberNames[0]} присоединился к чату`;
+            } else {
+              content = `👥 ${memberNames.join(', ')} присоединились к чату`;
+            }
+          } else if (m.text) {
+            // Если не удалось извлечь участников, используем текст из БД
+            content = m.text;
+          } else {
+            content = '👤 Пользователь присоединился к чату';
+          }
+        } else if (m.text) {
+          // Если нет rawJson, но есть текст, используем его
+          content = m.text;
+        } else {
+          content = '👤 Пользователь присоединился к чату';
+        }
+      } else {
+        // Для обычных сообщений обрабатываем как обычно
+      
+        // Показываем reply, если есть
+      if (m.reply_to || m.replyTo) {
+        const reply = m.reply_to || m.replyTo;
+        const replyText = reply.text || '';
+        const replyFromName = reply.from_user ? 
+          (reply.from_user.first_name || reply.from_user.firstName || reply.from_user.username || 'Unknown') : 
+          (reply.from_user === null ? 'Bot' : 'Unknown');
+        const replyLastName = reply.from_user ? (reply.from_user.last_name || reply.from_user.lastName || '') : '';
+        const fullName = replyLastName ? `${replyFromName} ${replyLastName}`.trim() : replyFromName;
+        
+        // Определяем тип медиа, если текст пустой
+        let mediaType = '';
+        if (!replyText) {
+          // Проверяем, есть ли информация о медиа в исходном сообщении
+          // Если нет текста, это может быть фото, документ, видео и т.д.
+          mediaType = '📎 Медиа';
+        }
+        
+        const previewText = replyText ? (replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText) : mediaType;
+        const borderColor = isOut ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 136, 204, 0.6)';
+        const bgColor = isOut ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 136, 204, 0.1)';
+        
+        content += `
+          <div style="border-left: 3px solid ${borderColor}; padding: 6px 8px; margin-bottom: 8px; background: ${bgColor}; border-radius: 4px; cursor: pointer;" onclick="scrollToMessage('${reply.message_id || reply.id}')" title="Нажмите, чтобы перейти к исходному сообщению">
+            <div style="font-weight: 600; font-size: 12px; color: ${isOut ? '#fff' : '#0088cc'}; margin-bottom: 2px;">${fullName}</div>
+            <div style="font-size: 12px; color: ${isOut ? 'rgba(255, 255, 255, 0.9)' : '#666'}; line-height: 1.3;">${previewText}</div>
+          </div>
+        `;
+      }
+
+      if (m.rawJson) {
+        if (m.rawJson.photo) {
+          // photo всегда массив в Telegram API
+          const photo = Array.isArray(m.rawJson.photo) 
+            ? m.rawJson.photo[m.rawJson.photo.length - 1] 
+            : m.rawJson.photo;
+          
+          const photoFileId = photo && photo.file_id ? photo.file_id : '';
+          const photoFileName = m.rawJson.caption || 'photo.jpg';
+          
+          // Показываем миниатюру и кнопки "Открыть" и "Скачать"
+          const photoApiUrl = photoFileId ? `${API_BASE}/api/bots/${currentBotId}/get-file-url/${photoFileId}` : '';
+          const thumbnailUrl = m.localFilePath || photoApiUrl;
+          const thumbnailImgHtml = m.localFilePath
+            ? `<img src="${thumbnailUrl}" alt="Фото" style="max-width: 300px; max-height: 200px; border-radius: 8px; display: block; object-fit: cover; cursor: pointer;" onclick="openPhoto('${photoFileId}')">`
+            : `<img src="${EMPTY_IMAGE_SRC}" data-protected-src="${photoApiUrl}" alt="Фото" style="max-width: 300px; max-height: 200px; border-radius: 8px; display: block; object-fit: cover; cursor: pointer;" onclick="openPhoto('${photoFileId}')">`;
+          
+          if (thumbnailUrl) {
+            content += `
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${thumbnailImgHtml}
+                <button onclick="downloadFile('${photoFileId}', '${photoFileName}')" style="background: #0088cc; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; align-self: flex-start;">
+                  📥 Скачать
+                </button>
+              </div>
+            `;
+          }
+        } else if (m.rawJson.document) {
+          content += `
+            <div style="background: rgba(255,255,255,0.9); padding: 12px; border-radius: 12px;">
+              <div style="display: flex; align-items: center;">
+                📄 <strong style="margin-left: 10px;">${m.rawJson.document.file_name || 'Документ'}</strong>
+              </div>
+              <div style="font-size: 14px; color: #666;">Размер: ${(m.rawJson.document.file_size / 1024).toFixed(1)} КБ</div>
+              <button onclick="downloadFile('${m.rawJson.document.file_id}', '${m.rawJson.document.file_name || "file"}')"
+                      style="background: #0088cc; color: white; border: none; padding: 8px 16px; border-radius: 20px; margin-top: 8px; cursor: pointer;">
+                Скачать файл
+              </button>
+            </div>
+          `;
+        } else if (m.rawJson.video_note) {
+          // Кружок (video note)
+          if (m.localFilePath) {
+            content += `
+              <video src="${m.localFilePath}" 
+                     style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; cursor: pointer;"
+                     onclick="playVideo('${m.rawJson.video_note.file_id}')"
+                     muted autoplay loop playsinline></video>
+            `;
+          } else {
+            content += `
+              <div style="width: 200px; height: 200px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                   onclick="playVideo('${m.rawJson.video_note.file_id}')">
+                <span style="color: white; font-size: 48px;">▶</span>
+              </div>
+            `;
+          }
+          content += '<small style="display: block; margin-top: 4px;">🔵 Кружок</small>';
+        } else if (m.rawJson.voice) {
+          // Голосовое сообщение
+          if (m.localFilePath) {
+            content += `
+              <audio src="${m.localFilePath}" controls style="max-width: 250px;"></audio>
+            `;
+          } else {
+            content += `
+              <button onclick="playAudio('${m.rawJson.voice.file_id}')"
+                      style="background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">
+                🎤 Прослушать (${Math.round(m.rawJson.voice.duration || 0)}с)
+              </button>
+            `;
+          }
+          content += '<small style="display: block; margin-top: 4px;">🎤 Голосовое сообщение</small>';
+        } else if (m.rawJson.video) {
+          // Превью видео (thumbnail) если есть - thumb это объект PhotoSize с file_id
+          let videoThumbFileId = null;
+          if (m.rawJson.video.thumb && m.rawJson.video.thumb.file_id) {
+            videoThumbFileId = m.rawJson.video.thumb.file_id;
+          } else if (m.rawJson.video.thumbnail && m.rawJson.video.thumbnail.file_id) {
+            videoThumbFileId = m.rawJson.video.thumbnail.file_id;
+          }
+          const videoThumbUrl = videoThumbFileId ? `${API_BASE}/api/bots/${currentBotId}/get-file-url/${videoThumbFileId}` : '';
+          const videoThumbImgHtml = videoThumbUrl
+            ? `<img src="${EMPTY_IMAGE_SRC}" data-protected-src="${videoThumbUrl}" alt="Превью видео" style="max-width: 300px; max-height: 200px; border-radius: 8px; display: block; object-fit: cover; cursor: pointer;" onclick="playVideo('${m.rawJson.video.file_id}')">`
+            : '';
+          
+          content += `
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${videoThumbImgHtml}
+              <div style="display: flex; align-items: center;">
+                🎥 <strong style="margin-left: 10px;">Видео</strong>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button onclick="playVideo('${m.rawJson.video.file_id}')"
+                        style="background: #34c759; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; flex: 1;">
+                  ▶ Просмотреть
+                </button>
+                <button onclick="downloadFile('${m.rawJson.video.file_id}', 'video.mp4')"
+                        style="background: #0088cc; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; flex: 1;">
+                  Скачать видео
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          content += m.text || '[Медиа без текста]';
+        }
+
+        if (m.rawJson.caption) {
+          content += `<p style="margin-top: 8px; font-style: italic; color: #555;">${m.rawJson.caption}</p>`;
+        }
+      } else {
+        // Для обычных сообщений без rawJson используем текст
+        content += m.text || '[Пустое сообщение]';
+      }
+      } // Конец блока else для обычных сообщений
+
+      // Для системных сообщений не показываем дату
+      if (!isSystemMessage) {
+        // Форматируем дату с проверкой на валидность
+        let timeStr = '';
+        if (m.date) {
+          const date = new Date(m.date);
+          if (!isNaN(date.getTime())) {
+            timeStr = date.toLocaleString('ru-RU', {
+              day: '2-digit', month: '2-digit', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            });
+          }
+        }
+        if (!timeStr) {
+          timeStr = 'Дата недоступна';
+        }
+        content += `<br><small>${timeStr}</small>`;
+      }
+      
+      div.innerHTML = content;
+      hydrateProtectedImages(div);
+      return div;
+    }
+
+    // Polling новых сообщений
+    function startPolling(telegramId) {
+      pollingInterval = setInterval(async () => {
+        if (!currentChatId || currentChatId !== telegramId) return;
+        
+        // Не запрашиваем сообщения, если lastMessageId ещё не установлен
+        if (!lastMessageId || lastMessageId === '0') return;
+
+        try {
+          // Всегда используем endpoint для чатов
+          const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${telegramId}/messages?after=${lastMessageId}`);
+          const messages = await res.json();
+
+          if (messages.length > 0) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            messages.forEach(m => {
+              messagesContainer.appendChild(createMessageElement(m));
+              lastMessageId = m.id;
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Обновляем список чатов при получении новых сообщений
+            await loadUsers();
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+        }
+      }, 3000);
+    }
+    
+    // Ответить на сообщение
+    function replyToMessage(message) {
+      // Преобразуем ID в число, если это строка
+      replyToMessageId = typeof message.id === 'string' ? parseInt(message.id) : message.id;
+      const replyPreview = document.getElementById('replyPreview');
+      const replyPreviewText = document.getElementById('replyPreviewText');
+      
+      if (replyPreview && replyPreviewText) {
+        const messageText = message.text || (message.rawJson ? '[Медиа]' : '[Пустое сообщение]');
+        const previewText = messageText.length > 100 ? messageText.substring(0, 100) + '...' : messageText;
+        replyPreviewText.textContent = previewText;
+        replyPreview.style.display = 'block';
+        
+        // Фокусируемся на поле ввода
+        const messageInput = document.getElementById('messageText');
+        if (messageInput) {
+          messageInput.focus();
+        }
+      }
+    }
+    
+    // Отменить reply
+    function cancelReply() {
+      replyToMessageId = null;
+      const replyPreview = document.getElementById('replyPreview');
+      if (replyPreview) {
+        replyPreview.style.display = 'none';
+      }
+    }
+    
+    // Прокрутить к сообщению по ID
+    function scrollToMessage(messageId) {
+      const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Подсвечиваем сообщение на короткое время
+        messageElement.style.transition = 'background-color 0.3s';
+        const originalBg = messageElement.style.backgroundColor;
+        messageElement.style.backgroundColor = 'rgba(0, 136, 204, 0.3)';
+        setTimeout(() => {
+          messageElement.style.backgroundColor = originalBg;
+          setTimeout(() => {
+            messageElement.style.transition = '';
+          }, 300);
+        }, 1500);
+      } else {
+        console.warn('Message not found:', messageId);
+      }
+    }
+    
+    // Прокрутить к закрепленному сообщению по telegram message_id
+    async function scrollToPinnedMessage(telegramMessageId) {
+      // Сначала пытаемся найти по data-telegram-message-id
+      let messageElement = document.querySelector(`[data-telegram-message-id="${telegramMessageId}"]`);
+      
+      // Если не нашли, ищем через API по message_id
+      if (!messageElement && currentBotId && currentChatId) {
+        try {
+          // Загружаем все сообщения и ищем нужное
+          const messagesRes = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${currentChatId}/messages/all`);
+          const messagesData = await messagesRes.json();
+          const messages = Array.isArray(messagesData) ? messagesData : (messagesData.data || []);
+          
+          // Ищем сообщение с нужным message_id
+          const targetMessage = messages.find(m => {
+            if (m.message_id) {
+              return String(m.message_id) === String(telegramMessageId);
+            }
+            // Fallback: ищем в raw_json
+            if (m.rawJson && m.rawJson.message_id) {
+              return String(m.rawJson.message_id) === String(telegramMessageId);
+            }
+            return false;
+          });
+          
+          if (targetMessage) {
+            // Ищем элемент по data-message-id (ID из БД)
+            messageElement = document.querySelector(`[data-message-id="${targetMessage.id}"]`);
+          }
+        } catch (err) {
+          console.error('Failed to load messages for pinned message:', err);
+        }
+      }
+      
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Подсвечиваем сообщение
+        messageElement.style.transition = 'background-color 0.3s';
+        const originalBg = messageElement.style.backgroundColor;
+        messageElement.style.backgroundColor = 'rgba(0, 136, 204, 0.3)';
+        setTimeout(() => {
+          messageElement.style.backgroundColor = originalBg;
+          setTimeout(() => {
+            messageElement.style.transition = '';
+          }, 300);
+        }, 1500);
+      } else {
+        console.warn('Pinned message not found:', telegramMessageId);
+        // Показываем уведомление пользователю
+        alert(`Сообщение с ID ${telegramMessageId} не найдено в текущем списке сообщений. Возможно, оно еще не загружено.`);
+      }
+    }
+    
+    // Показать контекстное меню для сообщения
+    function showMessageContextMenu(event, message) {
+      // Удаляем предыдущее меню, если есть
+      const existingMenu = document.getElementById('messageContextMenu');
+      if (existingMenu) {
+        existingMenu.remove();
+      }
+      
+      // Создаем меню
+      const menu = document.createElement('div');
+      menu.id = 'messageContextMenu';
+      menu.style.cssText = 'position: fixed; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; padding: 4px 0; min-width: 150px;';
+      menu.style.left = event.pageX + 'px';
+      menu.style.top = event.pageY + 'px';
+      
+      // Получаем telegram message_id
+      const telegramMessageId = message.rawJson?.message_id;
+      if (telegramMessageId) {
+        const pinButton = document.createElement('div');
+        pinButton.textContent = '📌 Закрепить';
+        pinButton.style.cssText = 'padding: 8px 16px; cursor: pointer; font-size: 14px;';
+        pinButton.onmouseover = () => pinButton.style.background = '#f0f0f0';
+        pinButton.onmouseout = () => pinButton.style.background = 'white';
+        pinButton.onclick = () => {
+          pinMessage(telegramMessageId);
+          menu.remove();
+        };
+        menu.appendChild(pinButton);
+      }
+      
+      const unpinButton = document.createElement('div');
+      unpinButton.textContent = '✕ Открепить';
+      unpinButton.style.cssText = 'padding: 8px 16px; cursor: pointer; font-size: 14px;';
+      unpinButton.onmouseover = () => unpinButton.style.background = '#f0f0f0';
+      unpinButton.onmouseout = () => unpinButton.style.background = 'white';
+      unpinButton.onclick = () => {
+        unpinMessage(telegramMessageId);
+        menu.remove();
+      };
+      menu.appendChild(unpinButton);
+      
+      document.body.appendChild(menu);
+      
+      // Закрываем меню при клике вне его
+      const closeMenu = (e) => {
+        if (!menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
+        }
+      };
+      setTimeout(() => document.addEventListener('click', closeMenu), 0);
+    }
+    
+    // Закрепить сообщение
+    async function pinMessage(telegramMessageId) {
+      if (!currentBotId || !currentChatId) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${currentChatId}/pin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: telegramMessageId, disable_notification: false })
+        });
+        
+        if (res.ok) {
+          // Перезагружаем чат для обновления закрепленного сообщения
+          await openChat(currentChatId);
+        } else {
+          alert('Не удалось закрепить сообщение');
+        }
+      } catch (err) {
+        console.error('Pin message error:', err);
+        alert('Ошибка при закреплении сообщения');
+      }
+    }
+    
+    // Открепить сообщение
+    async function unpinMessage(telegramMessageId) {
+      if (!currentBotId || !currentChatId) return;
+      
+      try {
+        const body = telegramMessageId ? { message_id: telegramMessageId } : {};
+        const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${currentChatId}/unpin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        
+        if (res.ok) {
+          // Перезагружаем чат для обновления закрепленного сообщения
+          await openChat(currentChatId);
+        } else {
+          alert('Не удалось открепить сообщение');
+        }
+      } catch (err) {
+        console.error('Unpin message error:', err);
+        alert('Ошибка при откреплении сообщения');
+      }
+    }
+
+    // Вспомогательные функции
+    async function downloadFile(fileId, suggestedName) {
+      try {
+        const response = await fetch(`${API_BASE}/api/bots/${currentBotId}/get-file-url/${fileId}`);
+        
+        if (!response.ok) {
+          alert("Не удалось получить файл");
+          return;
+        }
+
+        // Получаем файл как blob
+        const blob = await response.blob();
+        
+        // Создаём blob URL для скачивания
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = suggestedName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Освобождаем blob URL после скачивания
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      } catch (err) {
+        console.error("Ошибка скачивания:", err);
+        alert("Ошибка при скачивании файла");
+      }
+    }
+
+    async function playVideo(fileId) {
+      try {
+        const response = await fetch(`${API_BASE}/api/bots/${currentBotId}/get-file-url/${fileId}`);
+        
+        if (!response.ok) {
+          alert("Не удалось загрузить видео");
+          return;
+        }
+
+        // Получаем файл как blob и создаём blob URL
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        const videoElement = document.getElementById("modalVideo");
+        revokeBlobUrlFromElement(videoElement);
+        videoElement.dataset.blobUrl = url;
+        videoElement.src = url;
+        videoElement.load();
+        document.getElementById("videoModal").style.display = "flex";
+      } catch (err) {
+        alert("Ошибка загрузки видео");
+      }
+    }
+
+    async function playAudio(fileId) {
+      try {
+        const response = await fetch(`${API_BASE}/api/bots/${currentBotId}/get-file-url/${fileId}`);
+        
+        if (!response.ok) {
+          alert("Не удалось загрузить аудио");
+          return;
+        }
+
+        // Получаем файл как blob и создаём blob URL
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url); // Освобождаем URL после окончания
+        audio.play();
+      } catch (err) {
+        alert("Ошибка загрузки аудио");
+      }
+    }
+
+    function closeVideoModal() {
+      const videoElement = document.getElementById("modalVideo");
+      document.getElementById("videoModal").style.display = "none";
+      videoElement.pause();
+      revokeBlobUrlFromElement(videoElement);
+      videoElement.src = "";
+    }
+
+    async function openPhoto(fileId) {
+      try {
+        const response = await fetch(`${API_BASE}/api/bots/${currentBotId}/get-file-url/${fileId}`);
+        
+        if (!response.ok) {
+          alert("Не удалось загрузить фото");
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        
+        const photoElement = document.getElementById("modalPhoto");
+        revokeBlobUrlFromElement(photoElement);
+        photoElement.dataset.blobUrl = url;
+        photoElement.src = url;
+        document.getElementById("photoModal").style.display = "flex";
+      } catch (err) {
+        alert("Ошибка загрузки фото");
+      }
+    }
+
+    function closePhotoModal() {
+      const photoElement = document.getElementById("modalPhoto");
+      document.getElementById("photoModal").style.display = "none";
+      revokeBlobUrlFromElement(photoElement);
+      photoElement.src = "";
+    }
+
+    // === Управление ботами ===
+    function openBotManager() {
+      document.getElementById('botManagerModal').style.display = 'flex';
+      loadSortSettings();
+      loadBotManagerList();
+    }
+
+    function closeBotManager() {
+      document.getElementById('botManagerModal').style.display = 'none';
+    }
+
+    async function loadBotManagerList() {
+      try {
+        const res = await fetch(`${API_BASE}/api/bots`);
+        const bots = await res.json();
+        
+        const container = document.getElementById('botList');
+        if (bots.length === 0) {
+          container.innerHTML = '<p style="color:#888;">У вас пока нет ботов</p>';
+          return;
+        }
+        
+        container.innerHTML = bots.map(bot => `
+          <div style="background:#f9f9f9; padding:16px; border-radius:8px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong>${bot.name}</strong>
+                ${bot.isOwner ? '<span style="color:#0088cc; font-size:12px;"> (Владелец)</span>' : '<span style="color:#888; font-size:12px;"> (Доступ)</span>'}
+              </div>
+              ${bot.isOwner ? `<button onclick="toggleBotAccess('${bot.id}')" style="background:#e0e0e0; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Доступы</button>` : ''}
+            </div>
+            <div id="botAccess_${bot.id}" style="display:none; margin-top:12px;"></div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading bot list:', err);
+      }
+    }
+
+    async function addBot() {
+      const name = document.getElementById('newBotName').value.trim();
+      const token = document.getElementById('newBotToken').value.trim();
+      
+      if (!name || !token) {
+        alert('Заполните все поля');
+        return;
+      }
+      
+      try {
+        const mode = document.getElementById('newBotMode')?.value || 'poll';
+        const res = await fetch(`${API_BASE}/api/bots`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, token, mode })
+        });
+        
+        if (!res.ok) {
+          const data = await res.json();
+          alert(data.error || 'Ошибка добавления бота');
+          return;
+        }
+        
+        document.getElementById('newBotName').value = '';
+        document.getElementById('newBotToken').value = '';
+        loadBotManagerList();
+        loadBots(); // Обновить селектор
+        alert('Бот успешно добавлен!');
+      } catch (err) {
+        console.error('Error adding bot:', err);
+        alert('Ошибка добавления бота');
+      }
+    }
+
+    async function toggleBotAccess(botId) {
+      const container = document.getElementById(`botAccess_${botId}`);
+      if (container.style.display === 'none') {
+        container.style.display = 'block';
+        await loadBotAccessList(botId);
+      } else {
+        container.style.display = 'none';
+      }
+    }
+
+    async function loadBotAccessList(botId) {
+      const container = document.getElementById(`botAccess_${botId}`);
+      try {
+        const res = await fetch(`${API_BASE}/api/bots/${botId}/access`);
+        const accesses = await res.json();
+        
+        container.innerHTML = `
+          <div style="margin-bottom:10px;">
+            <input type="text" id="accessUsername_${botId}" placeholder="Логин пользователя" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+            <button onclick="grantAccess('${botId}')" style="background:#28a745; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Дать доступ</button>
+          </div>
+          <div style="font-size:14px;">
+            ${accesses.length === 0 ? '<span style="color:#888;">Нет дополнительных доступов</span>' : accesses.map(a => `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #eee;">
+                <span>${a.username}</span>
+                <button onclick="revokeAccess('${botId}', '${a.userId}')" style="background:#dc3545; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">Удалить</button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = '<span style="color:red;">Ошибка загрузки</span>';
+      }
+    }
+
+    async function grantAccess(botId) {
+      const username = document.getElementById(`accessUsername_${botId}`).value.trim();
+      if (!username) {
+        alert('Введите логин пользователя');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/bots/${botId}/access`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        
+        if (!res.ok) {
+          const data = await res.json();
+          alert(data.error || 'Ошибка');
+          return;
+        }
+        
+        loadBotAccessList(botId);
+      } catch (err) {
+        alert('Ошибка предоставления доступа');
+      }
+    }
+
+    async function revokeAccess(botId, userId) {
+      if (!confirm('Удалить доступ?')) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/bots/${botId}/access/${userId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!res.ok) {
+          alert('Ошибка удаления доступа');
+          return;
+        }
+        
+        loadBotAccessList(botId);
+      } catch (err) {
+        alert('Ошибка');
+      }
+    }
+
+    // Показать список участников группы
+    async function showChatMembers(chatId) {
+      const modal = document.getElementById('membersModal');
+      const membersList = document.getElementById('membersList');
+      
+      if (!modal || !membersList) {
+        console.error('Members modal not found');
+        return;
+      }
+      
+      modal.style.display = 'flex';
+      membersList.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Загрузка...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/bots/${currentBotId}/chats/${chatId}/members`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const membersData = await res.json();
+        // Извлекаем данные, если ответ обернут
+        const members = Array.isArray(membersData) ? membersData : (membersData.data || []);
+        
+        if (!members || members.length === 0) {
+          membersList.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Список администраторов недоступен<br><small style="font-size:12px; color:#999; line-height:1.6;">Telegram Bot API позволяет получить только список администраторов группы, а не всех участников.<br><br><strong>Возможные причины:</strong><br>• Бот не является администратором группы<br>• Бот не имеет прав на просмотр списка администраторов<br>• Группа не имеет администраторов<br><br>Для получения списка администраторов бот должен быть добавлен в группу как администратор.</small></div>';
+          return;
+        }
+        
+        let html = '<div style="padding:12px; background:#f0f0f0; border-bottom:1px solid #ddd; font-size:12px; color:#666; margin-bottom:8px;"><strong>Примечание:</strong> Telegram Bot API позволяет получить только список администраторов группы, а не всех участников.</div>';
+        members.forEach(member => {
+          const name = `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Без имени';
+          const username = member.username ? `@${member.username}` : '';
+          const status = member.status === 'creator' ? '👑 Создатель' : 
+                        member.status === 'administrator' ? '⭐ Администратор' : 
+                        '👤 Участник';
+          
+          html += `
+            <div style="padding:12px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px;">
+              <div style="width:40px; height:40px; border-radius:50%; background:#d8d8d8; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                ${member.first_name ? member.first_name.charAt(0).toUpperCase() : '?'}
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name}</div>
+                <div style="font-size:12px; color:#999; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${username || 'нет username'} • ${status}</div>
+              </div>
+            </div>
+          `;
+        });
+        
+        membersList.innerHTML = html;
+      } catch (err) {
+        console.error('Failed to load members:', err);
+        membersList.innerHTML = `<div style="text-align:center; padding:20px; color:#f00;">Ошибка загрузки участников<br><small style="font-size:12px; color:#999;">${err.message || 'Неизвестная ошибка'}</small></div>`;
+      }
+    }
+    
+    // Закрыть модальное окно участников
+    function closeMembersModal() {
+      document.getElementById('membersModal').style.display = 'none';
+    }
+
+    // Инициализация Telegram Login Widget
+    function initTelegramLogin() {
+      const apiId = document.getElementById('telegramApiId')?.value;
+      const container = document.getElementById('telegram-login-container');
+      
+      if (!apiId || !container) return;
+      
+      // Очищаем контейнер
+      container.innerHTML = '';
+      
+      // Создаем скрипт для Telegram Widget
+      const script = document.createElement('script');
+      script.src = 'https://telegram.org/js/telegram-widget.js?22';
+      script.setAttribute('data-telegram-login', 'your_bot_username'); // Замените на имя вашего бота
+      script.setAttribute('data-size', 'large');
+      script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+      script.setAttribute('data-request-access', 'write');
+      script.async = true;
+      
+      container.appendChild(script);
+    }
+    
+    // Обработчик авторизации через Telegram
+    function onTelegramAuth(user) {
+      console.log('Telegram auth:', user);
+      // Здесь можно отправить данные пользователя на сервер
+      alert(`Вход выполнен: ${user.first_name} ${user.last_name || ''} (@${user.username || 'без username'})`);
+    }
+
+    // Инициализация
+    checkAuth();
+    loadSortSettings();
+  </script>
+  <script async src="https://telegram.org/js/telegram-widget.js?22"></script>
+</body>
+</html>
