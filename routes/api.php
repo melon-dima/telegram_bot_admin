@@ -27,36 +27,36 @@ Route::prefix('auth')->group(function () {
 
 // Bots
 Route::prefix('bots')->group(function () {
-    // Общий список ботов:
-    // - X-Service-Token (или legacy X-Internal-Token) => сервисный доступ для node-bot
-    // - JWT                                                 => пользовательский доступ
+    // Access model:
+    // - X-Service-Token => service access for node-bot
+    // - JWT             => user access
     Route::get('/', [BotController::class, 'index']);
 
-    // Остальные операции требуют JWT-авторизации
+    // All other bot operations require JWT auth
     Route::middleware('auth:api')->group(function () {
         Route::post('/', [BotController::class, 'store']);
         Route::get('/{botId}', [BotController::class, 'show']);
         Route::put('/{botId}', [BotController::class, 'update']);
         Route::delete('/{botId}', [BotController::class, 'destroy']);
 
-        // Доступы
+        // Access
         Route::get('/{botId}/access', [BotAccessController::class, 'index']);
         Route::post('/{botId}/access', [BotAccessController::class, 'grant']);
         Route::delete('/{botId}/access/{userId}', [BotAccessController::class, 'revoke']);
 
-        // Пользователи
+        // Users
         Route::get('/{botId}/users', [UserController::class, 'getBotUsers']);
         Route::get('/{botId}/users/{telegramId}', [UserController::class, 'getUser']);
         Route::get('/{botId}/users/{telegramId}/avatar', [UserController::class, 'getUserAvatar']);
 
-        // Чаты
+        // Chats
         Route::get('/{botId}/chats', [ChatController::class, 'getBotChats']);
         Route::get('/{botId}/chats/{chatId}', [ChatController::class, 'getChat']);
         Route::get('/{botId}/chats/{chatId}/avatar', [ChatController::class, 'getChatAvatar']);
         Route::get('/{botId}/chats/{chatId}/members/count', [ChatController::class, 'getChatMembersCount']);
         Route::get('/{botId}/chats/{chatId}/members', [ChatController::class, 'getChatMembers']);
 
-        // Сообщения
+        // Messages
         Route::get('/{botId}/chats/{chatId}/messages', [MessageController::class, 'getChatMessages']);
         Route::get('/{botId}/chats/{chatId}/messages/all', [MessageController::class, 'getChatAllMessages']);
         Route::post('/{botId}/chats/{chatId}/send', [MessageController::class, 'sendChatMessage']);
@@ -64,7 +64,7 @@ Route::prefix('bots')->group(function () {
         Route::post('/{botId}/chats/{chatId}/pin', [MessageController::class, 'pinChatMessage']);
         Route::post('/{botId}/chats/{chatId}/unpin', [MessageController::class, 'unpinChatMessage']);
 
-        // Файлы
+        // Files
         Route::get('/{botId}/get-file-url/{fileId}', [FileController::class, 'getFileUrl']);
     });
 });

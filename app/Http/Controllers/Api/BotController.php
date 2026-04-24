@@ -13,7 +13,7 @@ class BotController extends Controller
     protected function isServiceRequest(Request $request): bool
     {
         $expected = config('services.service_auth.token');
-        $provided = $request->header('X-Service-Token') ?: $request->header('X-Internal-Token');
+        $provided = $request->header('X-Service-Token');
 
         return is_string($expected)
             && $expected !== ''

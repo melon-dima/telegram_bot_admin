@@ -27,7 +27,6 @@ export class LaravelAPI {
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Service-Token": config.laravel.token,
-        "X-Internal-Token": config.laravel.token,
       },
     });
     this.botTokens = new Map();

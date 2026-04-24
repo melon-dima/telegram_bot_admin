@@ -17,7 +17,7 @@ export const config = {
   logPretty: process.env.LOG_PRETTY === "true",
   laravel: {
     url: process.env.LARAVEL_API_URL || "http://localhost:8000/api",
-    token: process.env.SERVICE_API_TOKEN || process.env.LARAVEL_INTERNAL_TOKEN || "",
+    token: process.env.SERVICE_API_TOKEN || "",
   },
   poller: {
     pollTimeout: toInt(process.env.POLL_TIMEOUT, 30),
@@ -44,6 +44,6 @@ export const config = {
 
 if (!config.laravel.token) {
   throw new Error(
-    `SERVICE_API_TOKEN (or LARAVEL_INTERNAL_TOKEN) is required. Set it in ${process.env.DOTENV_PATH || defaultEnvPath}`,
+    `SERVICE_API_TOKEN is required. Set it in ${process.env.DOTENV_PATH || defaultEnvPath}`,
   );
 }
