@@ -26,6 +26,41 @@ services:
     networks:
       - traefik_default
 
+  tba_node_bot:
+    build:
+      context: .
+      dockerfile: node_bot/Dockerfile
+    container_name: tba_node_bot
+    environment:
+      TZ: Europe/Moscow
+      NODE_ENV: production
+      LARAVEL_API_URL: ${LARAVEL_API_URL:-http://tba_php/api}
+      SERVICE_API_TOKEN: ${SERVICE_API_TOKEN}
+      LARAVEL_INTERNAL_TOKEN: ${LARAVEL_INTERNAL_TOKEN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_PRETTY: ${LOG_PRETTY:-false}
+      POLL_TIMEOUT: ${POLL_TIMEOUT:-30}
+      BOTS_REFRESH_INTERVAL: ${BOTS_REFRESH_INTERVAL:-60000}
+      UPDATE_QUEUE_CONCURRENCY: ${UPDATE_QUEUE_CONCURRENCY:-10}
+      MAX_RETRIES: ${MAX_RETRIES:-5}
+      RETRY_MIN_TIMEOUT: ${RETRY_MIN_TIMEOUT:-1000}
+      RETRY_MAX_TIMEOUT: ${RETRY_MAX_TIMEOUT:-30000}
+      HEALTH_PORT: ${HEALTH_PORT:-3001}
+      HEARTBEAT_INTERVAL: ${HEARTBEAT_INTERVAL:-30000}
+    restart: unless-stopped
+    volumes:
+      - ./node_bot:/application
+      - tba_node_bot_node_modules:/application/node_modules
+    #depends_on:
+    #  - tba_php
+    ports:
+      - "${HEALTH_PORT:-3001}:3001"
+    networks:
+      - traefik_default
+
 networks:
   traefik_default:
     external: true
+
+volumes:
+  tba_node_bot_node_modules:
