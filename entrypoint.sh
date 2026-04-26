@@ -11,7 +11,12 @@ chown -R www-data:www-data /var/www/html 2>/dev/null || true
 chmod -R 755 /var/www/html 2>/dev/null || true
 
 if [ "${SKIP_COMPOSER_INSTALL:-0}" != "1" ]; then
-  composer install --no-interaction --optimize-autoloader
+  if [ -f composer.lock ]; then
+    composer install --no-interaction --optimize-autoloader
+  else
+    echo "composer.lock not found. Running composer update to generate it."
+    composer update --no-interaction --optimize-autoloader
+  fi
 fi
 
 exec "$@"
